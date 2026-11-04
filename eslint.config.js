@@ -9,6 +9,7 @@ export default [
         document: "readonly",
         fetch: "readonly",
         AbortController: "readonly",
+        ResizeObserver: "readonly",
       },
     },
     rules: { "no-undef": "error" },

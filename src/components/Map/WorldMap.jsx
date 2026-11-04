@@ -6,9 +6,25 @@ import styles from "./WorldMap.module.css";
 
 const ATTRIBUTION =
   '&copy; <a href="https://stadiamaps.com/attribution/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+const STAMEN_ATTRIBUTION =
+  '&copy; <a href="https://stadiamaps.com/attribution/">Stadia Maps</a> &copy; <a href="https://stamen.com/">Stamen Design</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
-function Basemap() {
+const MAP_STYLES = [
+  { id: "alidade_bright", name: "Яркая", attribution: ATTRIBUTION },
+  { id: "outdoors", name: "Природная", attribution: ATTRIBUTION },
+  { id: "stamen_terrain", name: "Рельефная", attribution: STAMEN_ATTRIBUTION },
+  {
+    id: "stamen_watercolor",
+    name: "Акварельная",
+    attribution: STAMEN_ATTRIBUTION,
+    extension: "jpg",
+  },
+  { id: "alidade_smooth", name: "Спокойная", attribution: ATTRIBUTION },
+];
+
+function Basemap({ style }) {
   const [fallback, setFallback] = useState(false);
+  const extension = style.extension || "png";
   return fallback ? (
     <TileLayer
       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -16,8 +32,8 @@ function Basemap() {
     />
   ) : (
     <TileLayer
-      url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-      attribution={ATTRIBUTION}
+      url={`https://tiles.stadiamaps.com/tiles/${style.id}/{z}/{x}/{y}${extension === "jpg" ? "" : "{r}"}.${extension}`}
+      attribution={style.attribution}
       eventHandlers={{ tileerror: () => setFallback(true) }}
     />
   );
@@ -67,11 +83,23 @@ function FocusEvent({ event }) {
   return null;
 }
 
+function ResizeMap() {
+  const map = useMap();
+  useEffect(() => {
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
+
 export default function WorldMap({
   events = [],
   selectedEvent = null,
   onSelectEvent,
 }) {
+  const [styleId, setStyleId] = useState("alidade_bright");
+  const mapStyle = MAP_STYLES.find((item) => item.id === styleId);
   const drawable = useMemo(
     () =>
       events
@@ -90,7 +118,8 @@ export default function WorldMap({
         worldCopyJump
         className={styles.leaflet}
       >
-        <Basemap />
+        <Basemap key={styleId} style={mapStyle} />
+        <ResizeMap />
         {drawable.map(({ event, observation }) => {
           const color = eventColor(event);
           const selected = selectedEvent?.id === event.id;
@@ -111,7 +140,7 @@ export default function WorldMap({
               pointToLayer={(_, latlng) =>
                 L.circleMarker(latlng, {
                   radius: selected ? 9 : 6,
-                  color: "#0b1422",
+                  color: "#ffffff",
                   weight: 2,
                   fillColor: color,
                   fillOpacity: 0.95,
@@ -133,8 +162,53 @@ export default function WorldMap({
             />
           );
         })}
+        {selectedEvent?.observations.map((observation, index) => {
+          if (observation === getLatestObservation(selectedEvent)) return null;
+          return (
+            <GeoJSON
+              key={`${selectedEvent.id}:old:${index}`}
+              data={{
+                type: "Feature",
+                properties: {},
+                geometry: observation.geometry,
+              }}
+              style={{
+                color: "#f1f5f9",
+                weight: 1,
+                dashArray: "4 4",
+                fillOpacity: 0.08,
+              }}
+              pointToLayer={(_, latlng) =>
+                L.circleMarker(latlng, {
+                  radius: 4,
+                  color: "#f1f5f9",
+                  fillColor: "#94a3b8",
+                  fillOpacity: 0.7,
+                })
+              }
+              onEachFeature={(_, layer) =>
+                layer.bindPopup(
+                  `Предыдущее наблюдение: ${new Date(observation.time).toLocaleDateString("ru-RU")}`,
+                )
+              }
+            />
+          );
+        })}
         {selectedEvent && <FocusEvent event={selectedEvent} />}
       </MapContainer>
+      <label className={styles.stylePicker}>
+        <span>Вид карты</span>
+        <select
+          value={styleId}
+          onChange={(event) => setStyleId(event.target.value)}
+        >
+          {MAP_STYLES.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name}
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   );
 }

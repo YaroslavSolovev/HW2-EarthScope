@@ -1,12 +1,22 @@
 export function normalizeUsgsResponse(d) {
-  return (d?.features || [])
-    .filter((f) => f?.geometry?.type === "Point")
+  return (Array.isArray(d?.features) ? d.features : [])
+    .filter((f) => {
+      if (f?.geometry?.type !== "Point") return false;
+      const [lon, lat] = f.geometry.coordinates || [];
+      return (
+        Number.isFinite(lon) &&
+        Number.isFinite(lat) &&
+        Math.abs(lon) <= 180 &&
+        Math.abs(lat) <= 90
+      );
+    })
     .map((f) => {
       const [lon, lat, depth] = f.geometry.coordinates || [];
       const p = f.properties || {};
-      const time = Number.isFinite(p.time)
-        ? new Date(p.time).toISOString()
-        : null;
+      const time =
+        Number.isFinite(p.time) && !Number.isNaN(new Date(p.time).getTime())
+          ? new Date(p.time).toISOString()
+          : null;
       return {
         id: "usgs:" + (f.id || p.code || lon + ":" + lat),
         source: "usgs",

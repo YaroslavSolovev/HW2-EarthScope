@@ -6,6 +6,7 @@ export async function fetchUsgsEarthquakes({ signal } = {}) {
   );
   if (!r.ok) throw Error("USGS request failed (" + r.status + ")");
   const d = await r.json();
-  if (d?.type !== "FeatureCollection") throw Error("Invalid USGS response");
+  if (d?.type !== "FeatureCollection" || !Array.isArray(d.features))
+    throw Error("Invalid USGS response");
   return normalizeUsgsResponse(d);
 }

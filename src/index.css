@@ -1,11 +1,14 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #183653;
+  background: #f3f8fc;
+}
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
-  background: #0b1422;
-  color: #f1f5f9;
-  font-family: Inter, system-ui, sans-serif;
+  min-width: 320px;
 }
 button {
   font: inherit;
@@ -13,119 +16,134 @@ button {
 .app {
   min-height: 100vh;
   display: grid;
-  grid-template-rows: 72px 1fr;
+  grid-template-rows: 76px 1fr;
 }
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0 24px;
-  background: #111e30;
-  border-bottom: 1px solid #2a3b50;
+  justify-content: space-between;
+  padding: 0 28px;
+  background: #fff;
+  border-bottom: 1px solid #dce8f2;
 }
 .brand {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  color: #123b61;
 }
 .sub {
+  color: #6d8aa3;
   font-size: 12px;
-  color: #94a3b8;
+  margin-top: 2px;
 }
 .badge {
-  font-size: 11px;
-  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 11px;
+  color: #2474aa;
+  background: #ecf7ff;
+  border: 1px solid #cfeaff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.badgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2ca7db;
 }
 .body {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 320px minmax(0, 1fr);
   min-height: 0;
 }
 .side {
-  padding: 20px;
-  background: #111e30;
-  border-right: 1px solid #2a3b50;
+  padding: 25px 20px 30px;
+  background: #fff;
+  border-right: 1px solid #dce8f2;
+  overflow-y: auto;
+  max-height: calc(100vh - 76px);
 }
 .side h2 {
-  font-size: 13px;
-  margin: 0 0 14px;
+  margin: 0 0 15px;
+  color: #6b879e;
+  font-size: 11px;
+  letter-spacing: 0.11em;
 }
-.muted {
-  color: #94a3b8;
-  font-size: 13px;
-  line-height: 1.5;
-}
-.main {
-  display: grid;
-  grid-template-rows: 1fr 130px;
-  min-width: 0;
-}
-.mapwrap {
-  min-height: 0;
-}
-.timeline {
-  border-top: 1px solid #2a3b50;
-  background: #111e30;
-  padding: 16px 20px;
-  color: #94a3b8;
+.listHeading {
+  margin-top: 35px !important;
+  padding-top: 24px;
+  border-top: 1px solid #e3edf5;
 }
 .status {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin: 12px 0;
+  margin-bottom: 9px;
 }
 .pill {
-  padding: 6px 9px;
-  border: 1px solid #2a3b50;
-  border-radius: 6px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: #f1f8fd;
+  border: 1px solid #d7e9f6;
+  color: #1b658f;
   font-size: 12px;
+  font-weight: 700;
+}
+.muted {
+  color: #7891a6;
+  font-size: 12px;
+  line-height: 1.5;
 }
 .error {
-  color: #fca5a5;
+  color: #b83542;
+  font-size: 12px;
+  line-height: 1.45;
 }
 .retry {
-  background: #64b5f6;
-  color: #0b1422;
+  margin-top: 8px;
   border: 0;
-  border-radius: 6px;
-  padding: 8px 12px;
+  border-radius: 7px;
+  padding: 10px 13px;
+  background: #137fc1;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 3px 9px #0d73b422;
 }
-@media (max-width: 700px) {
-  .body {
-    grid-template-columns: 1fr;
-  }
-  .side {
-    border-right: 0;
-    border-bottom: 1px solid #2a3b50;
-  }
-  .main {
-    grid-template-rows: 1fr 100px;
-  }
-  .header {
-    padding: 0 16px;
-  }
+.retry:hover {
+  background: #0b6aa8;
 }
 .retry:disabled {
   opacity: 0.6;
   cursor: wait;
 }
+.retry:focus-visible,
+.eventButton:focus-visible {
+  outline: 2px solid #168fd0;
+  outline-offset: 2px;
+}
 .eventButton {
   display: block;
   width: 100%;
+  margin: 0 0 5px;
+  padding: 10px 11px;
   text-align: left;
-  background: none;
+  background: transparent;
   border: 1px solid transparent;
-  border-radius: 6px;
-  color: #f1f5f9;
-  padding: 8px 10px;
-  margin: 0 0 4px;
+  border-radius: 8px;
+  color: #193e5a;
   cursor: pointer;
 }
 .eventButton:hover,
 .eventButton[aria-pressed="true"] {
-  background: #192a40;
-  border-color: #2a3b50;
+  background: #edf7fe;
+  border-color: #cfe8f9;
 }
 .eventButton strong,
 .eventButton span {
@@ -134,14 +152,63 @@ button {
 .eventButton strong {
   font-size: 13px;
   line-height: 1.35;
+  font-weight: 650;
 }
 .eventButton span {
-  color: #94a3b8;
-  font-size: 12px;
-  margin-top: 4px;
+  margin-top: 5px;
+  color: #7891a6;
+  font-size: 11px;
 }
-.eventButton:focus-visible,
-.retry:focus-visible {
-  outline: 2px solid #64b5f6;
-  outline-offset: 2px;
+.main {
+  display: grid;
+  grid-template-rows: minmax(400px, 1fr) 90px;
+  min-width: 0;
+}
+.mapwrap {
+  position: relative;
+  min-height: 0;
+  background: #e8f3fa;
+}
+.timeline {
+  display: flex;
+  align-items: center;
+  padding: 0 25px;
+  background: #fff;
+  border-top: 1px solid #dce8f2;
+  color: #7d99ae;
+  font-size: 13px;
+}
+@media (max-width: 760px) {
+  .app {
+    grid-template-rows: 68px 1fr;
+  }
+  .header {
+    padding: 0 16px;
+  }
+  .brand {
+    font-size: 20px;
+  }
+  .badge {
+    font-size: 0;
+    padding: 8px;
+  }
+  .badgeDot {
+    width: 8px;
+    height: 8px;
+  }
+  .body {
+    grid-template-columns: 1fr;
+  }
+  .side {
+    max-height: none;
+    padding: 18px 16px;
+    border-right: 0;
+    border-bottom: 1px solid #dce8f2;
+  }
+  .main {
+    grid-template-rows: minmax(420px, 65vh) 72px;
+  }
+  .timeline {
+    padding: 0 16px;
+  }
 }

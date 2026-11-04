@@ -9,10 +9,13 @@ async function j(u, s) {
   return r.json();
 }
 export async function fetchEonetCategories({ signal } = {}) {
-  return normalizeEonetCategories(await j(B + "/categories", signal));
+  const data = await j(B + "/categories", signal);
+  if (!Array.isArray(data?.categories))
+    throw Error("Invalid NASA categories response");
+  return normalizeEonetCategories(data);
 }
 export async function fetchEonetEvents({ signal } = {}) {
-  return normalizeEonetResponse(
-    await j(B + "/events?status=all&days=7", signal),
-  );
+  const data = await j(B + "/events?status=all&days=7", signal);
+  if (!Array.isArray(data?.events)) throw Error("Invalid NASA events response");
+  return normalizeEonetResponse(data);
 }
