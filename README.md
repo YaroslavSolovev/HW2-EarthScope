@@ -107,6 +107,10 @@ https://USERNAME.github.io/REPOSITORY/
 
 Имя репозитория автоматически используется как base path Vite во время сборки на GitHub Actions.
 
+## Опубликованная версия
+
+Рабочая версия проекта доступна по ссылке: [EarthScope на GitHub Pages](https://yaroslavsolovev.github.io/HW2-EarthScope/).
+
 ## Основные возможности
 
 - Live-режим за последние 24 часа, 7 или 30 дней.

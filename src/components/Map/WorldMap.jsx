@@ -30,6 +30,7 @@ const MAP_STYLES = [
     id: "openstreetmap",
     name: "OpenStreetMap",
     url: OSM_URL,
+    subdomains: "abc",
     attribution: OSM_ATTRIBUTION,
   },
   {
