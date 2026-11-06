@@ -1,6 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import L from "leaflet";
-import { GeoJSON, MapContainer, TileLayer, useMap } from "react-leaflet";
+import {
+  CircleMarker,
+  GeoJSON,
+  MapContainer,
+  TileLayer,
+  Tooltip,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import styles from "./WorldMap.module.css";
 
@@ -93,6 +101,76 @@ function ResizeMap() {
   return null;
 }
 
+function ClusteredPoints({ points, onSelectEvent }) {
+  const map = useMap();
+  const [view, setView] = useState(0);
+  useMapEvents({
+    moveend: () => setView((value) => value + 1),
+    zoomend: () => setView((value) => value + 1),
+  });
+
+  const groups = useMemo(() => {
+    const cells = new Map();
+    const bounds = map.getBounds().pad(0.2);
+    const zoom = map.getZoom();
+    for (const item of points) {
+      const [lon, lat] = item.observation.geometry.coordinates;
+      const position = L.latLng(lat, lon);
+      if (!bounds.contains(position)) continue;
+      const pixel = map.project(position, zoom);
+      const key = `${Math.floor(pixel.x / 70)}:${Math.floor(pixel.y / 70)}`;
+      if (!cells.has(key)) cells.set(key, []);
+      cells.get(key).push(item);
+    }
+    return [...cells.entries()].map(([key, items]) => {
+      const [x, y] = key.split(":").map(Number);
+      const center = map.unproject(
+        L.point((x + 0.5) * 70, (y + 0.5) * 70),
+        zoom,
+      );
+      return { key, items, center };
+    });
+  }, [points, map, view]);
+
+  return groups.map(({ key, items, center }) => {
+    const first = items[0];
+    const [lon, lat] = first.observation.geometry.coordinates;
+    const clustered = items.length > 1;
+    const color = clustered ? "#247cba" : eventColor(first.event);
+    const position = clustered ? center : [lat, lon];
+    return (
+      <CircleMarker
+        key={key}
+        center={position}
+        radius={clustered ? Math.min(26, 12 + Math.log2(items.length) * 3) : 6}
+        pathOptions={{
+          color: "#fff",
+          weight: 2,
+          fillColor: color,
+          fillOpacity: 0.95,
+        }}
+        eventHandlers={{
+          click: () =>
+            clustered
+              ? map.setView(
+                  position,
+                  Math.min(map.getZoom() + 2, map.getMaxZoom()),
+                )
+              : onSelectEvent?.(first.event),
+        }}
+      >
+        <Tooltip
+          permanent={clustered}
+          direction={clustered ? "center" : "top"}
+          className={clustered ? styles.clusterCount : undefined}
+        >
+          {clustered ? items.length : first.event.title}
+        </Tooltip>
+      </CircleMarker>
+    );
+  });
+}
+
 export default function WorldMap({
   events = [],
   selectedEvent = null,
@@ -107,6 +185,24 @@ export default function WorldMap({
         .filter((item) => item.observation),
     [events],
   );
+  const points = useMemo(
+    () =>
+      drawable.filter(
+        ({ event, observation }) =>
+          observation.geometry.type === "Point" &&
+          event.id !== selectedEvent?.id,
+      ),
+    [drawable, selectedEvent],
+  );
+  const shapes = useMemo(
+    () =>
+      drawable.filter(
+        ({ event, observation }) =>
+          observation.geometry.type !== "Point" ||
+          event.id === selectedEvent?.id,
+      ),
+    [drawable, selectedEvent],
+  );
 
   return (
     <div className={styles.map}>
@@ -120,7 +216,8 @@ export default function WorldMap({
       >
         <Basemap key={styleId} style={mapStyle} />
         <ResizeMap />
-        {drawable.map(({ event, observation }) => {
+        <ClusteredPoints points={points} onSelectEvent={onSelectEvent} />
+        {shapes.map(({ event, observation }) => {
           const color = eventColor(event);
           const selected = selectedEvent?.id === event.id;
           return (

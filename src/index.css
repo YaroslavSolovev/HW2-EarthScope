@@ -74,10 +74,133 @@ button {
   font-size: 11px;
   letter-spacing: 0.11em;
 }
+.sectionHeading {
+  margin-top: 24px !important;
+  padding-top: 20px;
+  border-top: 1px solid #e3edf5;
+}
+.modeTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  padding: 4px;
+  margin-bottom: 19px;
+  background: #edf5fb;
+  border-radius: 9px;
+}
+.modeTabs button {
+  border: 0;
+  border-radius: 6px;
+  padding: 9px;
+  background: transparent;
+  color: #51738d;
+  font-weight: 700;
+  cursor: pointer;
+}
+.modeTabs button.active {
+  background: #fff;
+  color: #126ca6;
+  box-shadow: 0 1px 5px #1b52731a;
+}
+.field {
+  display: block;
+  margin: 0 0 12px;
+  color: #52728a;
+  font-size: 12px;
+  font-weight: 650;
+}
+.field input,
+.field select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin-top: 6px;
+  padding: 9px 10px;
+  border: 1px solid #cbdfea;
+  border-radius: 7px;
+  background: #fff;
+  color: #183653;
+  font: inherit;
+  font-weight: 500;
+}
+.field input:focus-visible,
+.field select:focus-visible,
+.modeTabs button:focus-visible,
+.categoryHeader button:focus-visible,
+.categoryItem:focus-within,
+.moreButton:focus-visible {
+  outline: 2px solid #168fd0;
+  outline-offset: 2px;
+}
+.dateFields,
+.filterGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.historyForm .retry {
+  margin-top: 2px;
+}
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 13px 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #52728a;
+}
+.categoryHeader span {
+  margin-right: auto;
+}
+.categoryHeader button {
+  border: 0;
+  background: none;
+  padding: 4px 0;
+  color: #137fc1;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.categoryList {
+  max-height: 155px;
+  overflow-y: auto;
+  padding: 3px;
+  border: 1px solid #e3edf5;
+  border-radius: 7px;
+}
+.categoryItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 5px;
+  color: #355a73;
+  font-size: 12px;
+  cursor: pointer;
+}
+.categoryItem:hover {
+  background: #f1f8fd;
+}
+.categoryItem input {
+  accent-color: #137fc1;
+}
 .listHeading {
-  margin-top: 35px !important;
+  margin-top: 24px !important;
   padding-top: 24px;
   border-top: 1px solid #e3edf5;
+}
+.moreButton {
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px;
+  border: 1px solid #cfe8f9;
+  border-radius: 7px;
+  background: #edf7fe;
+  color: #126ca6;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 .status {
   display: flex;
