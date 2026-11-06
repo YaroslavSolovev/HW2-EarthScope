@@ -8,6 +8,33 @@
   width: 100%;
   background: #e8f3fa;
 }
+.eventMarker {
+  display: block;
+  width: 34px !important;
+  height: 34px !important;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.eventMarker span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 2px solid #fff;
+  border-radius: 9px;
+  background: var(--marker-bg);
+  color: var(--marker-color);
+  box-shadow: 0 2px 8px #1b527350;
+}
+.eventMarkerActive span {
+  border-color: #137fc1;
+  box-shadow:
+    0 0 0 3px #137fc133,
+    0 3px 10px #1b527350;
+  transform: scale(1.1);
+}
 .stylePicker {
   position: absolute;
   top: 16px;

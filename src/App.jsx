@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import WorldMap from "./components/Map/WorldMap.jsx";
 import EventDetails from "./components/EventDetails.jsx";
+import EventIcon from "./components/EventIcon.jsx";
 import { fetchUsgsEarthquakes, fetchUsgsHistory } from "./api/usgs.js";
 import {
   fetchEonetCategories,
@@ -19,6 +20,12 @@ import {
   latestTime,
   validateHistoryDates,
 } from "./utils/filters.js";
+import {
+  eventsAtReplayTime,
+  minimumReplaySeconds,
+  replayStats,
+  replayTime,
+} from "./utils/replay.js";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const daysAgo = (days) =>
@@ -43,7 +50,15 @@ export default function App() {
   const [minMagnitude, setMinMagnitude] = useState("");
   const [status, setStatus] = useState("all");
   const [visibleCount, setVisibleCount] = useState(50);
+  const [replayProgress, setReplayProgress] = useState(0);
+  const [replayPlaying, setReplayPlaying] = useState(false);
+  const [replaySeconds, setReplaySeconds] = useState(20);
+  const animationFrame = useRef(null);
+  const replayStartedAt = useRef(0);
+  const replayStartProgress = useRef(0);
   const request = useRef(null);
+
+  const replayMinimum = useMemo(() => minimumReplaySeconds(range), [range]);
 
   const loadData = useCallback(async () => {
     request.current?.abort();
@@ -113,9 +128,33 @@ export default function App() {
     return () => clearInterval(timer);
   }, [mode, loadData]);
 
+  useEffect(() => {
+    setReplaySeconds((value) => Math.max(value, replayMinimum));
+  }, [replayMinimum]);
+
+  useEffect(() => {
+    if (!replayPlaying || mode !== "history" || !range) return undefined;
+
+    replayStartedAt.current = performance.now();
+    replayStartProgress.current = replayProgress;
+    const frame = (now) => {
+      const passed = (now - replayStartedAt.current) / 1000;
+      const next = replayStartProgress.current + passed / replaySeconds;
+      if (next >= 1) {
+        setReplayProgress(1);
+        setReplayPlaying(false);
+        return;
+      }
+      setReplayProgress(next);
+      animationFrame.current = requestAnimationFrame(frame);
+    };
+    animationFrame.current = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(animationFrame.current);
+  }, [replayPlaying, replaySeconds, mode, range]);
+
   const allCategories = useMemo(
     () => [
-      { id: "earthquake", title: "Землетрясения" },
+      { id: "earthquake", title: "Earthquakes" },
       ...categories.filter(
         (item) => item.id !== "earthquake" && item.id !== "earthquakes",
       ),
@@ -143,6 +182,14 @@ export default function App() {
     status,
   ]);
 
+  const replayEvents = useMemo(
+    () => eventsAtReplayTime(events, replayTime(range, replayProgress)),
+    [events, range, replayProgress],
+  );
+  const mapEvents = mode === "history" && range ? replayEvents : events;
+  const replayDate = replayTime(range, replayProgress);
+  const replayEventStats = replayStats(replayEvents);
+
   const selectedEvent =
     events.find((event) => event.id === selected?.id) || null;
   const shown = events.slice(0, visibleCount);
@@ -164,6 +211,14 @@ export default function App() {
     setLastUpdated(null);
     setSelected(null);
     setVisibleCount(50);
+    setReplayPlaying(false);
+    setReplayProgress(0);
+  }
+
+  function toggleReplay() {
+    if (!range || !events.length) return;
+    if (replayProgress >= 1) setReplayProgress(0);
+    setReplayPlaying((value) => !value);
   }
 
   function submitHistory(event) {
@@ -185,16 +240,16 @@ export default function App() {
       <header className="header">
         <div>
           <div className="brand">EarthScope</div>
-          <div className="sub">Карта природных событий мира</div>
+          <div className="sub">Global natural events explorer</div>
         </div>
         <div className="badge">
-          <span className="badgeDot" /> ДАННЫЕ USGS И NASA
+          <span className="badgeDot" /> USGS AND NASA DATA
         </div>
       </header>
 
       <div className="body">
         <aside className="side">
-          <div className="modeTabs" role="group" aria-label="Режим просмотра">
+          <div className="modeTabs" role="group" aria-label="View mode">
             <button
               className={mode === "live" ? "active" : ""}
               aria-pressed={mode === "live"}
@@ -221,7 +276,7 @@ export default function App() {
 
           {mode === "live" ? (
             <label className="field">
-              Период
+              Period
               <select
                 value={liveDays}
                 onChange={(event) => {
@@ -229,35 +284,37 @@ export default function App() {
                   setLiveDays(Number(event.target.value));
                 }}
               >
-                <option value={1}>Последние 24 часа</option>
-                <option value={7}>Последние 7 дней</option>
-                <option value={30}>Последние 30 дней</option>
+                <option value={1}>Last 24 hours</option>
+                <option value={7}>Last 7 days</option>
+                <option value={30}>Last 30 days</option>
               </select>
             </label>
           ) : (
             <form onSubmit={submitHistory} className="historyForm">
               <div className="dateFields">
                 <label className="field">
-                  С UTC{" "}
+                  From UTC{" "}
                   <input
                     type="date"
                     value={start}
                     max={today()}
                     onChange={(event) => setStart(event.target.value)}
+                    onInput={(event) => setStart(event.currentTarget.value)}
                   />
                 </label>
                 <label className="field">
-                  По UTC{" "}
+                  To UTC{" "}
                   <input
                     type="date"
                     value={end}
                     max={today()}
                     onChange={(event) => setEnd(event.target.value)}
+                    onInput={(event) => setEnd(event.currentTarget.value)}
                   />
                 </label>
               </div>
               <p className="muted">
-                Не больше 90 календарных дней. Архив NASA может быть неполным.
+                Up to 90 calendar days. NASA history may be incomplete.
               </p>
               {dateError && (
                 <p className="error" role="alert">
@@ -265,30 +322,30 @@ export default function App() {
                 </p>
               )}
               <button className="retry" type="submit" disabled={loading}>
-                Найти события
+                Find events
               </button>
             </form>
           )}
 
           {mode === "history" && range && (
             <p className="muted">
-              Показан период: {range.start} — {range.end} UTC
+              Showing period: {range.start} — {range.end} UTC
             </p>
           )}
 
-          <h2 className="sectionHeading">ИСТОЧНИКИ ДАННЫХ</h2>
+          <h2 className="sectionHeading">DATA SOURCES</h2>
           <div className="status">
             <span className="pill">USGS · {usgs.length}</span>
             <span className="pill">NASA · {nasa.length}</span>
           </div>
           {lastUpdated && (
             <p className="muted">
-              Последнее обновление: {lastUpdated.toLocaleString("ru-RU")}
+              Last updated: {lastUpdated.toLocaleString("en-GB")}
             </p>
           )}
           {loading && (
             <p className="muted" role="status">
-              Загружаем события…
+              Loading events…
             </p>
           )}
           {Object.entries(errors).map(([source, message]) => (
@@ -296,21 +353,28 @@ export default function App() {
               {source}: {message}
             </p>
           ))}
+          {Object.keys(errors).length > 0 &&
+            Object.keys(errors).length < 2 &&
+            (usgs.length > 0 || nasa.length > 0) && (
+              <p className="partial" role="status">
+                Partial data: one source is available. You can retry the other.
+              </p>
+            )}
           <button
             className="retry"
             onClick={loadData}
             disabled={loading || (mode === "history" && !range)}
           >
-            Обновить данные
+            Reload data
           </button>
 
-          <h2 className="sectionHeading">ФИЛЬТРЫ</h2>
+          <h2 className="sectionHeading">FILTERS</h2>
           <label className="field">
-            Поиск по названию или региону
+            Search by title or region
             <input
               type="search"
               value={query}
-              placeholder="Например, Japan"
+              placeholder="For example, Japan"
               onChange={(event) => {
                 setQuery(event.target.value);
                 setVisibleCount(50);
@@ -319,7 +383,7 @@ export default function App() {
           </label>
           <div className="filterGrid">
             <label className="field">
-              Магнитуда USGS от (M4.5+)
+              USGS magnitude from (M4.5+)
               <input
                 type="number"
                 min="4.5"
@@ -334,7 +398,7 @@ export default function App() {
               />
             </label>
             <label className="field">
-              Статус NASA
+              NASA status
               <select
                 value={status}
                 onChange={(event) => {
@@ -342,22 +406,22 @@ export default function App() {
                   setVisibleCount(50);
                 }}
               >
-                <option value="all">Любой</option>
-                <option value="open">Открытые</option>
-                <option value="closed">Закрытые</option>
+                <option value="all">Any</option>
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
               </select>
             </label>
           </div>
           <div className="categoryHeader">
-            <span>Категории</span>
+            <span>Categories</span>
             <button type="button" onClick={() => setChosenCategories(null)}>
-              Все
+              All
             </button>
             <button
               type="button"
               onClick={() => setChosenCategories(new Set())}
             >
-              Снять все
+              Clear all
             </button>
           </div>
           <div className="categoryList">
@@ -376,15 +440,15 @@ export default function App() {
             ))}
           </div>
 
-          <h2 className="listHeading">СОБЫТИЯ · {events.length}</h2>
+          <h2 className="listHeading">EVENTS · {events.length}</h2>
           {mode === "history" && !range && (
-            <p className="muted">Выберите даты и нажмите «Найти события».</p>
+            <p className="muted">Choose dates and click “Find events”.</p>
           )}
           {!loading &&
             (mode === "live" || range) &&
             events.length === 0 &&
             (!errors.usgs || !errors.nasa) && (
-              <p className="muted">По выбранным условиям событий нет.</p>
+              <p className="muted">No events match the selected filters.</p>
             )}
           {shown.map((event) => (
             <button
@@ -393,12 +457,18 @@ export default function App() {
               onClick={() => setSelected(event)}
               aria-pressed={selectedEvent?.id === event.id}
             >
-              <strong>{event.title}</strong>
+              <span className="eventTitle">
+                <EventIcon
+                  event={event}
+                  active={selectedEvent?.id === event.id}
+                />
+                <strong>{event.title}</strong>
+              </span>
               <span>
                 {event.source.toUpperCase()} ·{" "}
                 {latestTime(event)
-                  ? new Date(latestTime(event)).toLocaleDateString("ru-RU")
-                  : "Дата неизвестна"}
+                  ? new Date(latestTime(event)).toLocaleDateString("en-GB")
+                  : "Unknown date"}
               </span>
             </button>
           ))}
@@ -407,7 +477,7 @@ export default function App() {
               className="moreButton"
               onClick={() => setVisibleCount((count) => count + 50)}
             >
-              Показать ещё 50
+              Show 50 more
             </button>
           )}
         </aside>
@@ -415,7 +485,7 @@ export default function App() {
         <main className="main">
           <div className="mapwrap">
             <WorldMap
-              events={events}
+              events={mapEvents}
               selectedEvent={selectedEvent}
               onSelectEvent={setSelected}
             />
@@ -426,7 +496,87 @@ export default function App() {
             />
           </div>
           <div className="timeline">
-            Временная шкала и воспроизведение появятся на третьем этапе
+            {mode === "history" && range ? (
+              <div className="replayPanel" aria-label="Historical event replay">
+                <div className="replayTopline">
+                  <strong>Replay</strong>
+                  <span>
+                    {replayDate?.toLocaleString("en-GB", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                      timeZone: "UTC",
+                    })}{" "}
+                    UTC
+                  </span>
+                  <span className="replayStats">
+                    On map: {replayEventStats.total} · USGS:{" "}
+                    {replayEventStats.usgs} · NASA: {replayEventStats.eonet}
+                  </span>
+                </div>
+                <div className="replayControls">
+                  <button
+                    className="replayButton"
+                    onClick={toggleReplay}
+                    disabled={!events.length}
+                  >
+                    {replayPlaying
+                      ? "Pause"
+                      : replayProgress >= 1
+                        ? "Restart"
+                        : "Play"}
+                  </button>
+                  <button
+                    className="replayReset"
+                    onClick={() => {
+                      setReplayPlaying(false);
+                      setReplayProgress(0);
+                    }}
+                    disabled={!events.length}
+                  >
+                    Reset
+                  </button>
+                  <input
+                    className="replaySlider"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.001"
+                    value={replayProgress}
+                    onChange={(event) => {
+                      setReplayPlaying(false);
+                      setReplayProgress(Number(event.target.value));
+                    }}
+                    aria-label="Current replay moment"
+                  />
+                  <label className="replayDuration">
+                    Seconds
+                    <input
+                      type="number"
+                      min={replayMinimum}
+                      max="600"
+                      value={replaySeconds}
+                      onChange={(event) =>
+                        setReplaySeconds(
+                          Math.min(
+                            600,
+                            Math.max(
+                              replayMinimum,
+                              Number(event.target.value) || replayMinimum,
+                            ),
+                          ),
+                        )
+                      }
+                    />
+                  </label>
+                </div>
+                <small>
+                  Minimum {replayMinimum}s for {range.start} — {range.end}. Only
+                  real observations are used.
+                </small>
+              </div>
+            ) : (
+              "Timeline is available in History mode"
+            )}
           </div>
         </main>
       </div>

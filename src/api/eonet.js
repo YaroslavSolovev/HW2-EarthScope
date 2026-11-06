@@ -8,7 +8,8 @@ const BASE = "https://eonet.gsfc.nasa.gov/api/v3";
 
 async function readJson(url, signal) {
   const response = await fetch(url, { signal });
-  if (!response.ok) throw Error(`NASA EONET: ошибка HTTP ${response.status}`);
+  if (!response.ok)
+    throw Error(`NASA EONET: HTTP request failed (${response.status})`);
   return response.json();
 }
 
@@ -17,14 +18,14 @@ async function readEvents(params, signal) {
   url.search = new URLSearchParams({ status: "all", ...params });
   const data = await readJson(url, signal);
   if (!Array.isArray(data?.events))
-    throw Error("NASA EONET: неверный формат ответа");
+    throw Error("NASA EONET: invalid response format");
   return { events: normalizeEonetResponse(data), count: data.events.length };
 }
 
 export async function fetchEonetCategories({ signal } = {}) {
   const data = await readJson(`${BASE}/categories`, signal);
   if (!Array.isArray(data?.categories)) {
-    throw Error("NASA EONET: неверный формат категорий");
+    throw Error("NASA EONET: invalid categories format");
   }
   return normalizeEonetCategories(data);
 }
@@ -58,7 +59,7 @@ export async function fetchEonetHistory({ start, end, signal } = {}) {
     );
     if (count >= 5000) {
       if (from.getTime() === to.getTime()) {
-        throw Error("NASA EONET: дневной ответ достиг лимита 5000 событий");
+        throw Error("NASA EONET: daily response reached the 5000-event limit");
       }
       const days = Math.floor((to - from) / 86400000);
       const middle = new Date(from.getTime() + Math.floor(days / 2) * 86400000);

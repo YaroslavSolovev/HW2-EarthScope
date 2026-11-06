@@ -2,7 +2,7 @@ const DAY_MS = 86400000;
 
 export function validateHistoryDates(start, end, today = new Date()) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) {
-    return "Укажите обе даты.";
+    return "Please enter both dates.";
   }
   const from = new Date(`${start}T00:00:00Z`);
   const to = new Date(`${end}T00:00:00Z`);
@@ -12,13 +12,13 @@ export function validateHistoryDates(start, end, today = new Date()) {
     from.toISOString().slice(0, 10) !== start ||
     to.toISOString().slice(0, 10) !== end
   ) {
-    return "Проверьте формат дат.";
+    return "Check the date format.";
   }
-  if (from > to) return "Начальная дата позже конечной.";
+  if (from > to) return "The start date is after the end date.";
   if (Math.round((to - from) / DAY_MS) + 1 > 90) {
-    return "Можно выбрать не больше 90 календарных дней.";
+    return "You can select up to 90 calendar days.";
   }
-  if (to > today) return "Конечная дата находится в будущем.";
+  if (to > today) return "The end date is in the future.";
   return null;
 }
 

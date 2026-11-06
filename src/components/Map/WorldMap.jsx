@@ -3,6 +3,7 @@ import L from "leaflet";
 import {
   CircleMarker,
   GeoJSON,
+  Marker,
   MapContainer,
   TileLayer,
   Tooltip,
@@ -11,6 +12,11 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import styles from "./WorldMap.module.css";
+import {
+  eventIconLabel,
+  eventIconMeta,
+  eventIconSvg,
+} from "../../utils/eventIcons.js";
 
 const ATTRIBUTION =
   '&copy; <a href="https://stadiamaps.com/attribution/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
@@ -18,16 +24,16 @@ const STAMEN_ATTRIBUTION =
   '&copy; <a href="https://stadiamaps.com/attribution/">Stadia Maps</a> &copy; <a href="https://stamen.com/">Stamen Design</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
 const MAP_STYLES = [
-  { id: "alidade_bright", name: "Яркая", attribution: ATTRIBUTION },
-  { id: "outdoors", name: "Природная", attribution: ATTRIBUTION },
-  { id: "stamen_terrain", name: "Рельефная", attribution: STAMEN_ATTRIBUTION },
+  { id: "alidade_bright", name: "Bright", attribution: ATTRIBUTION },
+  { id: "outdoors", name: "Outdoors", attribution: ATTRIBUTION },
+  { id: "stamen_terrain", name: "Terrain", attribution: STAMEN_ATTRIBUTION },
   {
     id: "stamen_watercolor",
-    name: "Акварельная",
+    name: "Watercolor",
     attribution: STAMEN_ATTRIBUTION,
     extension: "jpg",
   },
-  { id: "alidade_smooth", name: "Спокойная", attribution: ATTRIBUTION },
+  { id: "alidade_smooth", name: "Smooth", attribution: ATTRIBUTION },
 ];
 
 function Basemap({ style }) {
@@ -73,6 +79,16 @@ function eventColor(event) {
   const id = event.categoryIds?.[0] || event.id;
   const hash = [...id].reduce((value, char) => value + char.charCodeAt(0), 0);
   return palette[hash % palette.length];
+}
+
+function eventMarkerIcon(event, active = false) {
+  const meta = eventIconMeta(event);
+  return L.divIcon({
+    className: `${styles.eventMarker} ${active ? styles.eventMarkerActive : ""}`,
+    html: `<span title="${eventIconLabel(event)}" style="--marker-color:${meta.color};--marker-bg:${active ? meta.activeBackground : meta.background}">${eventIconSvg(event, 24, meta.color)}</span>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+  });
 }
 
 function FocusEvent({ event }) {
@@ -138,6 +154,18 @@ function ClusteredPoints({ points, onSelectEvent }) {
     const clustered = items.length > 1;
     const color = clustered ? "#247cba" : eventColor(first.event);
     const position = clustered ? center : [lat, lon];
+    if (!clustered) {
+      return (
+        <Marker
+          key={key}
+          position={position}
+          icon={eventMarkerIcon(first.event)}
+          eventHandlers={{ click: () => onSelectEvent?.(first.event) }}
+        >
+          <Tooltip direction="top">{first.event.title}</Tooltip>
+        </Marker>
+      );
+    }
     return (
       <CircleMarker
         key={key}
@@ -235,13 +263,17 @@ export default function WorldMap({
                 fillOpacity: selected ? 0.4 : 0.2,
               }}
               pointToLayer={(_, latlng) =>
-                L.circleMarker(latlng, {
-                  radius: selected ? 9 : 6,
-                  color: "#ffffff",
-                  weight: 2,
-                  fillColor: color,
-                  fillOpacity: 0.95,
-                })
+                selected && observation.geometry.type === "Point"
+                  ? L.marker(latlng, {
+                      icon: eventMarkerIcon(event, true),
+                    })
+                  : L.circleMarker(latlng, {
+                      radius: selected ? 9 : 6,
+                      color: "#ffffff",
+                      weight: 2,
+                      fillColor: color,
+                      fillOpacity: 0.95,
+                    })
               }
               onEachFeature={(_, layer) => {
                 const content = document.createElement("div");
@@ -250,7 +282,7 @@ export default function WorldMap({
                 content.append(title, document.createElement("br"));
                 content.append(
                   document.createTextNode(
-                    `${event.source.toUpperCase()} · ${observation.time ? new Date(observation.time).toLocaleDateString() : "Date unknown"}`,
+                    `${event.source.toUpperCase()} · ${observation.time ? new Date(observation.time).toLocaleDateString("en-GB") : "Date unknown"}`,
                   ),
                 );
                 layer.bindPopup(content);
@@ -285,7 +317,7 @@ export default function WorldMap({
               }
               onEachFeature={(_, layer) =>
                 layer.bindPopup(
-                  `Предыдущее наблюдение: ${new Date(observation.time).toLocaleDateString("ru-RU")}`,
+                  `Previous observation: ${new Date(observation.time).toLocaleDateString("en-GB")}`,
                 )
               }
             />
@@ -294,7 +326,7 @@ export default function WorldMap({
         {selectedEvent && <FocusEvent event={selectedEvent} />}
       </MapContainer>
       <label className={styles.stylePicker}>
-        <span>Вид карты</span>
+        <span>Map style</span>
         <select
           value={styleId}
           onChange={(event) => setStyleId(event.target.value)}

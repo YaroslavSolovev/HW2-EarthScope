@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EarthScope icon options</title>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.js"></script>
+    <style>
+      :root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #173852; background: #eef6fb; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 32px; }
+      .page { max-width: 1180px; margin: auto; }
+      h1 { margin: 0; font-size: 28px; letter-spacing: -0.04em; }
+      header p { margin: 8px 0 0; color: #718ba0; }
+      .note { margin: 18px 0 24px; padding: 12px 14px; border: 1px solid #cfe3ef; border-radius: 10px; background: #fff; color: #55758b; font-size: 13px; }
+      .sets { display: grid; gap: 18px; }
+      .set { padding: 20px; border: 1px solid #d5e5ee; border-radius: 16px; background: #fff; box-shadow: 0 8px 24px #2a618014; }
+      .set h2 { margin: 0 0 4px; font-size: 17px; }
+      .set > p { margin: 0 0 16px; color: #7791a4; font-size: 12px; }
+      .grid { display: grid; grid-template-columns: repeat(8, minmax(82px, 1fr)); gap: 12px; }
+      .sample { display: grid; gap: 8px; justify-items: center; padding: 10px 6px; border-radius: 10px; color: #58758a; font-size: 11px; text-align: center; }
+      .sample.selected { background: #edf7fe; outline: 2px solid #2689bf; outline-offset: -2px; }
+      .iconBox { display: grid; place-items: center; width: 46px; height: 46px; }
+      .iconBox svg { width: 25px; height: 25px; }
+      .outline .iconBox { border: 1px solid var(--color); border-radius: 12px; color: var(--color); background: var(--soft); }
+      .outline .iconBox svg { stroke-width: 1.8; }
+      .solid .iconBox { border-radius: 13px; color: white; background: var(--color); }
+      .solid .iconBox svg { stroke-width: 2.2; }
+      .badge .iconBox { border: 3px solid white; border-radius: 50%; color: white; background: var(--color); box-shadow: 0 0 0 2px var(--color), 0 4px 10px #1a527340; }
+      .badge .iconBox svg { stroke-width: 2.1; }
+      .badge .sample.selected .iconBox { box-shadow: 0 0 0 3px #2184bb, 0 0 0 6px #2184bb33, 0 4px 10px #1a527340; transform: scale(1.08); }
+      .rich .iconBox { border: 1px solid color-mix(in srgb, var(--color) 35%, white); border-radius: 14px; color: var(--color); background: linear-gradient(145deg, var(--soft), white); box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--color) 14%, white), 0 4px 10px #1a527318; }
+      .rich .iconBox svg { width: 29px; height: 29px; stroke: currentColor; fill: none; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
+      .rich .iconBox .fill { fill: color-mix(in srgb, var(--color) 28%, white); stroke: var(--color); }
+      .rich .iconBox .accent { fill: var(--color); stroke: none; opacity: .85; }
+      .rich .sample.selected .iconBox { outline: 3px solid #2184bb; outline-offset: 3px; }
+      .comic .iconBox { width: 56px; height: 56px; border: 2px solid #173852; border-radius: 15px; color: var(--color); background: var(--soft); box-shadow: 4px 4px 0 #1738521c; }
+      .comic .iconBox svg { width: 37px; height: 37px; stroke: #173852; stroke-width: 1.8; }
+      .comic .iconBox .fill { fill: var(--color); stroke: #173852; }
+      .comic .iconBox .accent { fill: #fff; stroke: #173852; stroke-width: 1.1; opacity: 1; }
+      .comic .sample.selected .iconBox { outline: 3px solid #2184bb; outline-offset: 3px; }
+      .cinematic .iconBox { width: 58px; height: 58px; border: 1px solid white; border-radius: 16px; color: white; background: linear-gradient(145deg, var(--color), color-mix(in srgb, var(--color) 55%, #102b43)); box-shadow: inset 0 2px 0 #ffffff66, inset 0 -8px 0 #061c3038, 0 5px 12px #163f5b38; }
+      .cinematic .iconBox svg { width: 39px; height: 39px; stroke: currentColor; stroke-width: 1.5; }
+      .cinematic .iconBox .fill { fill: #ffffff36; stroke: white; }
+      .cinematic .iconBox .accent { fill: #fff; stroke: none; opacity: .95; }
+      .cinematic .sample.selected .iconBox { outline: 3px solid #2184bb; outline-offset: 3px; }
+      .crack { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .solid .crack { stroke-width: 2.2; }
+      .legend { display: flex; gap: 18px; margin-top: 16px; color: #6d8799; font-size: 11px; }
+      .legend span { display: inline-flex; align-items: center; gap: 6px; }
+      .dot { width: 10px; height: 10px; border-radius: 50%; background: #2184bb; }
+      @media (max-width: 850px) { body { padding: 18px; } .grid { grid-template-columns: repeat(4, minmax(75px, 1fr)); } }
+      @media (max-width: 500px) { .grid { grid-template-columns: repeat(2, minmax(90px, 1fr)); } }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <h1>EarthScope icon options</h1>
+        <p>Professional Lucide-based symbols with one custom tectonic-crack mark for earthquakes.</p>
+      </header>
+      <div class="note">The three directions use the same meanings. The selected example shows the active state that can be used after a click.</div>
+      <div class="sets" id="sets"></div>
+    </main>
+    <script>
+      const items = [
+        ["earthquake", "Earthquake", "#d94f6b", "#fff0f3"],
+        ["flame", "Wildfire", "#de672b", "#fff2e9"],
+        ["cloud-lightning", "Storm", "#3b73bd", "#edf4ff"],
+        ["mountain", "Volcano", "#8c4bb2", "#f5effb"],
+        ["waves", "Flood", "#16859e", "#e9f8fb"],
+        ["mountain-snow", "Landslide", "#8b6b45", "#f7f1eb"],
+        ["sun-medium", "Drought", "#bb861a", "#fff8e6"],
+        ["snowflake", "Snow / ice", "#4a8fc6", "#edf7ff"]
+      ];
+      const sets = [
+        ["Lucide Outline", "Clean professional outlines for the sidebar and details card.", "outline"],
+        ["Lucide Solid", "Higher contrast for fast scanning at small sizes.", "solid"],
+        ["Map Badges", "Color-coded round markers with a clear active ring.", "badge"],
+        ["Comic Illustration", "Bold outlines, layered fills, and an editorial comic feel.", "comic"],
+        ["Cinematic Illustration", "Deeper lighting, material contrast, and a compact scene-like feel.", "cinematic"]
+      ];
+      const richPaths = {
+        earthquake: '<path class="fill" d="M3 7h6l3 4-2 6H3Z"/><path class="fill" d="M21 17h-6l-3-6 2-4h7Z"/><path d="m12 3-1 5 2 3-2 4 1 6"/><path class="accent" d="M5 9h3l1 2-1 2H5Z"/>',
+        flame: '<path class="fill" d="M12 21c4 0 7-2.5 7-6.1 0-2.8-1.5-4.8-3.7-6.4.1 2-1 3.4-2.5 4.2.2-3.7-1.4-6-3.4-7.7C9.4 8.6 7 11.6 7 15c0 3.6 2.3 6 5 6Z"/><path class="accent" d="M12 18c1.8 0 3-1.2 3-2.8 0-1-.4-1.8-1.2-2.6 0 1-.6 1.6-1.2 2-.1-1.4-.7-2.3-1.5-3.2-.7 1.2-1.4 2.4-1.4 3.7 0 1.7 1 2.9 2.3 2.9Z"/>',
+        'cloud-lightning': '<path class="fill" d="M5 17h12a4 4 0 0 0 .3-8 5.5 5.5 0 0 0-10.5 1A3.5 3.5 0 0 0 5 17Z"/><path class="accent" d="m13 11-2 4h3l-1 4 4-6h-3l1-2Z"/><path d="M7 6c1-1 2-1 3-1"/>',
+        mountain: '<path class="fill" d="m3 20 7-12 3 5 2-3 6 10H3Z"/><path class="accent" d="m10 8 2 5 2-3 2 3-4 1-2-3Z"/><path d="M7 14h3m6 2h2"/>',
+        waves: '<path class="fill" d="M3 9c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2v8H3Z"/><path d="M3 9c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2M3 15c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2"/><circle class="accent" cx="17" cy="5" r="1.3"/>',
+        'mountain-snow': '<path class="fill" d="m3 20 7-12 3 5 2-3 6 10H3Z"/><path class="accent" d="m10 8 2 5 2-3 2 3-3 1-3-3Z"/><circle class="accent" cx="18" cy="17" r="1.5"/><circle class="accent" cx="6" cy="15" r="1.1"/>',
+        'sun-medium': '<circle class="fill" cx="12" cy="10" r="4"/><path d="M12 2v2m0 12v2M4 10H2m20 0h-2M6.3 4.3 5 3m13.7 1.3L20 3M5 20l5-4 3 3 6-5"/><circle class="accent" cx="12" cy="10" r="1.4"/>',
+        snowflake: '<path class="fill" d="M12 3v18M4 8l16 8M4 16 20 8M8 4l4 3 4-3M8 20l4-3 4 3"/><circle class="accent" cx="12" cy="12" r="2"/>',
+      };
+      function earthquakeIcon() {
+        return '<svg class="crack" viewBox="0 0 24 24"><path d="M3 7h6l3 4-2 6H3Z"/><path d="M21 17h-6l-3-6 2-4h7Z"/><path d="m12 3-1 5 2 3-2 4 1 6"/></svg>';
+      }
+      function icon(name, mode) {
+        if (mode === "comic" || mode === "cinematic") return '<svg viewBox="0 0 24 24" aria-hidden="true"><g>' + (richPaths[name] || richPaths.mountain) + '</g></svg>';
+        return name === "earthquake" ? earthquakeIcon() : '<i data-lucide="' + name + '"></i>';
+      }
+      document.querySelector("#sets").innerHTML = sets.map(function(set, setIndex) {
+        const title = set[0], desc = set[1], mode = set[2];
+        const samples = items.map(function(item, index) {
+          const name = item[0], label = item[1], color = item[2], soft = item[3];
+          const selected = setIndex === 2 && index === 0 ? " selected" : "";
+          return '<div class="sample' + selected + '" style="--color:' + color + ';--soft:' + soft + '"><div class="iconBox">' + icon(name, mode) + '</div><span>' + label + '</span></div>';
+        }).join("");
+        const legend = setIndex === 2 ? '<div class="legend"><span><i class="dot"></i> active event example</span></div>' : "";
+        return '<section class="set ' + mode + '"><h2>' + title + '</h2><p>' + desc + '</p><div class="grid">' + samples + '</div>' + legend + '</section>';
+      }).join("");
+      if (window.lucide) lucide.createIcons();
+    </script>
+  </body>
+</html>

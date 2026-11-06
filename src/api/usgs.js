@@ -10,17 +10,18 @@ const FEEDS = {
 async function readEarthquakes(url, signal) {
   const response = await fetch(url, { signal });
   if (response.status === 204) return { events: [], count: 0 };
-  if (!response.ok) throw Error(`USGS: ошибка HTTP ${response.status}`);
+  if (!response.ok)
+    throw Error(`USGS: HTTP request failed (${response.status})`);
   const data = await response.json();
   if (data?.type !== "FeatureCollection" || !Array.isArray(data.features)) {
-    throw Error("USGS: неверный формат ответа");
+    throw Error("USGS: invalid response format");
   }
   return { events: normalizeUsgsResponse(data), count: data.features.length };
 }
 
 export async function fetchUsgsEarthquakes({ signal, days = 1 } = {}) {
   const feed = FEEDS[days];
-  if (!feed) throw Error("Неизвестный период Live");
+  if (!feed) throw Error("Unknown Live period");
   const result = await readEarthquakes(
     `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/${feed}`,
     signal,
@@ -33,7 +34,7 @@ export async function fetchUsgsHistory({ start, end, signal } = {}) {
   let cursor = new Date(`${start}T00:00:00Z`);
   const last = new Date(`${end}T00:00:00Z`);
 
-  // Небольшие интервалы не перегружают каталог. При достижении лимита делим снова.
+  // Small intervals keep the catalog request manageable. Split again at the limit.
   async function loadPart(from, to) {
     const url = new URL("https://earthquake.usgs.gov/fdsnws/event/1/query");
     url.search = new URLSearchParams({
@@ -47,7 +48,7 @@ export async function fetchUsgsHistory({ start, end, signal } = {}) {
     const { events, count } = await readEarthquakes(url, signal);
     if (count >= 20000) {
       if (to - from <= 1000) {
-        throw Error("USGS: слишком много событий в одном интервале");
+        throw Error("USGS: too many events in one interval");
       }
       const middle = new Date((from.getTime() + to.getTime()) / 2);
       await loadPart(from, middle);

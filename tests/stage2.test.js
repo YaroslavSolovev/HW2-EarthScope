@@ -7,23 +7,27 @@ import {
 } from "../src/utils/filters.js";
 import { mergeEvents } from "../src/utils/mergeEvents.js";
 import { fetchUsgsHistory } from "../src/api/usgs.js";
+import { eventIconLabel, eventKind } from "../src/utils/eventIcons.js";
+import {
+  eventsAtReplayTime,
+  minimumReplaySeconds,
+  periodDays,
+  replayStats,
+} from "../src/utils/replay.js";
 
 const observation = (time, lon = 10) => ({
   time,
   geometry: { type: "Point", coordinates: [lon, 20] },
 });
 
-test("History принимает ровно 90 дней и отсекает будущие даты", () => {
+test("History accepts 90 days and rejects future dates", () => {
   const now = new Date("2026-11-05T12:00:00Z");
   assert.equal(validateHistoryDates("2026-08-08", "2026-11-05", now), null);
   assert.match(validateHistoryDates("2026-08-07", "2026-11-05", now), /90/);
-  assert.match(
-    validateHistoryDates("2026-11-06", "2026-11-06", now),
-    /будущем/,
-  );
+  assert.match(validateHistoryDates("2026-11-06", "2026-11-06", now), /future/);
 });
 
-test("History показывает только наблюдения выбранных дат", () => {
+test("History keeps observations inside the selected dates", () => {
   const event = {
     id: "eonet:1",
     observations: [
@@ -41,7 +45,7 @@ test("History показывает только наблюдения выбра�
   assert.equal(result[0].firstObservedAt, "2026-11-01T00:00:00.000Z");
 });
 
-test("Категории с несколькими значениями и фильтры работают вместе", () => {
+test("Multi-category events and filters work together", () => {
   const events = [
     {
       source: "usgs",
@@ -78,7 +82,7 @@ test("Категории с несколькими значениями и фи�
   );
 });
 
-test("Повторное событие сохраняет разные наблюдения", () => {
+test("Repeated events preserve different observations", () => {
   const first = {
     id: "eonet:1",
     categoryIds: ["wildfires"],
@@ -98,7 +102,7 @@ test("Повторное событие сохраняет разные набл
   assert.deepEqual(result[0].categoryIds, ["wildfires", "drought"]);
 });
 
-test("USGS HTTP 204 означает пустой исторический результат", async () => {
+test("USGS HTTP 204 returns an empty history result", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => ({ status: 204 });
   try {
@@ -110,4 +114,37 @@ test("USGS HTTP 204 означает пустой исторический ре�
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("Replay uses real observations and enforces minimum duration", () => {
+  const range = { start: "2026-11-01", end: "2026-11-10" };
+  const event = {
+    id: "eonet:2",
+    source: "eonet",
+    observations: [
+      observation("2026-11-02T00:00:00Z"),
+      observation("2026-11-06T00:00:00Z", 12),
+    ],
+  };
+  assert.equal(periodDays(range), 10);
+  assert.equal(minimumReplaySeconds(range), 20);
+  const visible = eventsAtReplayTime([event], new Date("2026-11-03T00:00:00Z"));
+  assert.equal(visible.length, 1);
+  assert.equal(visible[0].observations.length, 1);
+  assert.deepEqual(replayStats(visible), { total: 1, usgs: 0, eonet: 1 });
+});
+
+test("Categories receive clear icon types and labels", () => {
+  assert.equal(
+    eventKind({ source: "eonet", categoryIds: ["wildfires"] }),
+    "fire",
+  );
+  assert.equal(
+    eventIconLabel({ source: "eonet", categoryIds: ["floods"] }),
+    "Flood",
+  );
+  assert.equal(
+    eventIconLabel({ source: "usgs", categoryIds: ["earthquake"] }),
+    "Earthquake",
+  );
 });
