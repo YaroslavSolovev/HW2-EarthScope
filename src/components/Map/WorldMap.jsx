@@ -18,35 +18,44 @@ import {
   eventIconSvg,
 } from "../../utils/eventIcons.js";
 
-const ATTRIBUTION =
-  '&copy; <a href="https://stadiamaps.com/attribution/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
-const STAMEN_ATTRIBUTION =
-  '&copy; <a href="https://stadiamaps.com/attribution/">Stadia Maps</a> &copy; <a href="https://stamen.com/">Stamen Design</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+const OSM_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const CARTO_ATTRIBUTION = `${OSM_ATTRIBUTION} &copy; <a href="https://carto.com/attributions">CARTO</a>`;
+const TOPO_ATTRIBUTION =
+  'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, SRTM | Map style &copy; <a href="https://opentopomap.org/">OpenTopoMap</a>';
+const OSM_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
 const MAP_STYLES = [
-  { id: "alidade_bright", name: "Bright", attribution: ATTRIBUTION },
-  { id: "outdoors", name: "Outdoors", attribution: ATTRIBUTION },
-  { id: "stamen_terrain", name: "Terrain", attribution: STAMEN_ATTRIBUTION },
   {
-    id: "stamen_watercolor",
-    name: "Watercolor",
-    attribution: STAMEN_ATTRIBUTION,
-    extension: "jpg",
+    id: "openstreetmap",
+    name: "OpenStreetMap",
+    url: OSM_URL,
+    attribution: OSM_ATTRIBUTION,
   },
-  { id: "alidade_smooth", name: "Smooth", attribution: ATTRIBUTION },
+  {
+    id: "carto-light",
+    name: "Light",
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    subdomains: "abcd",
+    attribution: CARTO_ATTRIBUTION,
+  },
+  {
+    id: "opentopo",
+    name: "Terrain",
+    url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    subdomains: "abc",
+    attribution: TOPO_ATTRIBUTION,
+  },
 ];
 
 function Basemap({ style }) {
   const [fallback, setFallback] = useState(false);
-  const extension = style.extension || "png";
   return fallback ? (
-    <TileLayer
-      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    />
+    <TileLayer url={OSM_URL} attribution={OSM_ATTRIBUTION} />
   ) : (
     <TileLayer
-      url={`https://tiles.stadiamaps.com/tiles/${style.id}/{z}/{x}/{y}${extension === "jpg" ? "" : "{r}"}.${extension}`}
+      url={style.url}
+      subdomains={style.subdomains}
       attribution={style.attribution}
       eventHandlers={{ tileerror: () => setFallback(true) }}
     />
@@ -204,7 +213,7 @@ export default function WorldMap({
   selectedEvent = null,
   onSelectEvent,
 }) {
-  const [styleId, setStyleId] = useState("alidade_bright");
+  const [styleId, setStyleId] = useState("openstreetmap");
   const mapStyle = MAP_STYLES.find((item) => item.id === styleId);
   const drawable = useMemo(
     () =>
