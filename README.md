@@ -9,7 +9,6 @@ EarthScope - учебный React + Vite проект для просмотра 
 - 3. Румянцева Дарья
 - 4. Соловьев Ярослав
 
-
 ## API и источники данных
 
 - [USGS Earthquake Feeds](https://earthquake.usgs.gov/earthquakes/feed/v1.0/) — оперативные ленты землетрясений.
@@ -80,6 +79,33 @@ npm run build
 ```bash
 npm run preview
 ```
+
+## Публикация на GitHub Pages
+
+В проект уже добавлен workflow `.github/workflows/deploy.yml`. Он автоматически запускается после push в ветку `main`.
+
+1. Создайте репозиторий на GitHub и добавьте remote:
+
+```bash
+git remote add origin https://github.com/USERNAME/REPOSITORY.git
+```
+
+2. Отправьте ветку `main`:
+
+```bash
+git branch -M main
+git push -u origin main
+```
+
+3. На GitHub откройте `Settings → Pages` и выберите `GitHub Actions` как источник публикации.
+
+После успешного workflow сайт будет доступен по адресу:
+
+```text
+https://USERNAME.github.io/REPOSITORY/
+```
+
+Имя репозитория автоматически используется как base path Vite во время сборки на GitHub Actions.
 
 ## Основные возможности
 
